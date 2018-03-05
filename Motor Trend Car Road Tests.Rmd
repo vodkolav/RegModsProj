@@ -1,0 +1,114 @@
+---
+
+title: "Motor Trend Car Road Tests. Regression Models Course Project"
+author: "Michael Berger"
+date: "21 January 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("ggplot2")
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+data("mtcars")
+mtcars$am <- factor(mtcars$am)
+g <- ggplot(data = mtcars, aes(x = am, y = mpg, fill = am))
+g <- g + geom_violin()
+g
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r manual/automatic as predicted by  mpg. not what i need, echo=FALSE}
+mdl <- glm(am ~ mpg, family = "binomial", data = mtcars)
+summary(mdl)
+plot(mdl)
+x <- seq(0,35,.5)
+g1 <- ggplot(data = mtcars )
+g1 <- g1 + geom_point(aes(x = mpg, y =am ))
+g1 <- g1 + geom_line(aes(x=mtcars$mpg,y=(1+predict(mdl, type = "response"))), col = "red")
+g1
+```
+
+```{r mpg as predicted by manual/automatic, echo=FALSE}
+mdl <- lm(mpg ~ am , data = mtcars)
+summary(mdl)
+plot(mdl)
+g1 <- ggplot(data = mtcars)
+g1 <- g1 + geom_point(aes(x = am, y = mpg))
+g1 <- g1 + geom_abline(aes(intercept = mdl$coef[1] ,slope = mdl$coef[2]), col = "red")
+g1
+```
+
+```{r mpg as predicted by all and step, echo=FALSE}
+library(car)
+library(plyr)
+library(ggplot2)
+mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
+mdl <- lm(mpg ~ . , data = mtcars)
+summary(mdl)
+st <- step(mdl, direction = "backward", trace=TRUE )
+anova(st)
+vi <- as.data.frame(vif(mdl))
+# which(vi==max(vi))
+# rownames(vi)
+# as.list(vi)
+# plot(vi)
+```
+
+```{r correlation matrix, echo=FALSE}
+data("mtcars")
+co <- cor(mc)
+co <- co*(abs(co)<.3)
+co<-abs(co)
+corrplot.mixed(co)#, method = "ellipse")
+#), type = "upper")
+plot(mtcars$cyl, mtcars$disp)
+# plot(mdl)
+# g1 <- ggplot(data = mtcars)
+# g1 <- g1 + geom_point(aes(x = am, y = mpg))
+# g1 <- g1 + geom_abline(aes(intercept = mdl$coef[1] ,slope = mdl$coef[2]), col = "red")
+# g1
+```
+
+```{r mpg as predicted by all, echo=FALSE}
+mdl3 <- lm(mpg ~ disp * am, data = mtcars)
+summary(mdl3)
+plot(mdl3)
+g1 <- ggplot(data = mtcars) + geom_point(aes(x = disp, y = mpg, col = am))
+g1 <- g1 + geom_abline(aes(intercept = sum(mdl3$coef[c(1)])  ,slope = sum(mdl3$coef[c(2)]), col="salmon"))
+g1 <- g1 + geom_abline(aes(intercept = sum(mdl3$coef[c(1,3)])  ,slope = sum(mdl3$coef[c(2,4)]), col = "blue"))
+g1
+```
+
+
+```{r mpg as predicted by all, echo=FALSE}
+mdl5 <- lm(mpg ~  am + cyl + hp + wt + disp, data = mtcars)
+mdl4 <- lm(mpg ~  am + cyl + hp + wt, data = mtcars)
+mdl3 <- lm(mpg ~  am + cyl + hp, data = mtcars)
+mdl2 <- lm(mpg ~  am + cyl, data = mtcars)
+mdl1 <- lm(mpg ~  am, data = mtcars)
+anova(mdl1, mdl2, mdl3, mdl4, mdl5)
+summary(mdl2)$coef
+plot(mdl4)
+g2 <- ggplot(data = mtcars) + geom_point(aes(x = hp, y = mpg, col=carb))
+#g2 <- g2 + geom_abline(aes(intercept = mdl$coef[1] ,slope = mdl$coef[2]), col = "red")
+g2
+```
+
+
+
+
+
+===========================================================================

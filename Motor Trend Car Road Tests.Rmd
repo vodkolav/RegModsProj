@@ -8,7 +8,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("ggplot2")
+library(car)
+library(plyr)
+library(ggplot2)
 ```
 
 ## R Markdown
@@ -52,9 +54,7 @@ g1
 ```
 
 ```{r mpg as predicted by all and step, echo=FALSE}
-library(car)
-library(plyr)
-library(ggplot2)
+
 mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
 mdl <- lm(mpg ~ . , data = mtcars)
 summary(mdl)

@@ -48,7 +48,6 @@ g1 <- ggplot(data = mtcars) + geom_violin(aes(x = am, y = mpg, fill = am))
 #
 g1 <- g1 + geom_abline(aes(intercept = mdlam$coef[1] -  mdlam$coef[2] ,slope = mdlam$coef[2]), col = "red")
 g1
-mdlam$coef
 # mtcars$am <- factor(mtcars$am)
 # g <- ggplot(data = mtcars, aes(x = am, y = mpg, fill = am))
 # g <- g 
@@ -57,24 +56,25 @@ mdlam$coef
 ```
 
 The line looks fine and the p-values are highly significant.
-however, Adjusted R-squared points out that this model accounts for only 34% of variance in the data. Hence, we should expand the model to include more variables. Howevwe, not all variables are necessary in the model, and we know that excess variables cause variance inflation and overfiting.  We will use stepwise model selection procedure to sort out variables which do not contribute to the interpretability.
+However, Adjusted R-squared points out that this model accounts for only 34% of variance in the data. Hence, we should expand the model to include more variables. Not all the available variables are necessary in the model, and we know that excess variables cause variance inflation and overfiting. As can be seen below, even though the Adjusted R-squared is rather high, none of the ceafficent are even remotely significant. 
 
-```{r mpg as predicted by all and step, echo=FALSE}
+
+```{r mpg as predicted by all, echo=FALSE, eval=TRUE}
 
 mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
 mdlall <- lm(mpg ~ . , data = mtcars)
 summary(mdlall)
-mdlstep <- step(mdlall, direction = "backward", trace=TRUE)
-summary(mdlstep)
-vif(mdlstep)
 
-# which(vi==max(vi))
-# rownames(vi)
-# as.list(vi)
-# plot(vi)
 ```
 
-Stepwise Algorithm yeilds a model with 4 variables: cyl, hp, wt, am. Adjusted R-squared of 84% is significantly larger than that of the simplest model with am as only predictor. This points out that 84 of variability in the dat can be explained by the improved model.
+We will use stepwise model selection procedure to sort out variables which do not contribute to the interpretability.
+```{r step, echo=FALSE, eval=TRUE}
+mdlstep <- step(mdlall, direction = "backward", trace=FALSE)
+summary(mdlstep)
+vif(mdlstep)
+```
+
+Stepwise Algorithm yeilds a model with 4 variables: cyl, hp, wt, am. Adjusted R-squared of 84% is significantly larger than that of the simplest model (with am as only predictor). This points out that 84 of variability in the dat can be explained by the improved model.
 Variance inflation factor analysis does not reveal abnormally large (more than 10) values, which implies that model does not contain variables with high corelation with each other.  
 
 p-values for coefficents are significant except for the cyl8 and am1. The first one implies that there is no significant difference between 6 and 8 cylinder engine cars. The second one says there is no difference between gear types. 
@@ -95,15 +95,21 @@ plot(mdlstep)
 
 ```
 
-Residuals plots look rather normally distributed which implies that what little variance is left in the model is normally random and unpredictable. 
-Standardised residuals are situated close to the normal line  on Q-Q plot, another indication that model leftover variance is random normal.
+Residuals plots do not express any non-random pattern which implies that what little variance is left in the model is normally random and unpredictable.  
+Standardised residuals are situated close to the normal line  on Q-Q plot, another indication that model leftover variance is random normal.  
 Cook'd distance plot does not reveal any extreme data that may influence the model in a game-changing way. 
 
 
 ## Conclusion
-In this study we have proposed a model which tackles an amount of influence which different cars parameters exert on fuel consumption. A stepwise selection algorythm gave us a model with 4 main influencing parameters: number of cylinders (cyl), horsepower (hp), weight (wt) and gearbox type (am). While all the parameters are significant, the gearbox type is not. Hence we can conclude that the answer to the stydy's question - whether am is a significant predictor for the mpg - is negative. 
+In this study we have proposed a model which tackles an amount of influence which different cars parameters exert on fuel consumption. A stepwise selection algorythm gave us a model with 4 main influencing parameters: number of cylinders (cyl), horsepower (hp), weight (wt) and gearbox type (am). While all the parameters are significant, the gearbox type is not. Hence we can conclude that the answer to the stydy's question, whether am is a significant predictor for the mpg, is negative.   
+As for the assignment questions, It is not reasonable to answer them since am significance level is not sufficient to be able to answer those questions. Nevertheless, suppose the coefficent was sufficiently significant, what would have been the answers to the questions?
+1. “Is an automatic or manual transmission better for MPG”  
+  am1 coefficent is positive, meaning that the manual transmission vehicles travel more miles on one gallon of fuel, so the manual transmission is better than automatic.  
+2. "Quantify the MPG difference between automatic and manual transmissions"  
+  am1 coefficent is 1.8, so the manual transmission vehicles travel 1.8 miles more than automatic transmission vehicles on one gallon of fuel.  
 
-
+\newpage 
+##Appendix  
 
 
 

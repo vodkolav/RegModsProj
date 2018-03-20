@@ -1,9 +1,13 @@
 ---
-title: "Motor Trend Car Road Tests. Regression Models Course Project"
+title: "Motor Trend Car Road Tests"
+subtitle: "Regression Models Course Project"
 author: "Michael Berger"
-date: "21 January 2018"
+date: "16 March 2018"
 output:
-  pdf_document: default
+  pdf_document: 
+    # fig_height: 3
+    # fig_width: 7
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -15,21 +19,30 @@ library(corrplot)
 ```
 ## Abstract
 
-The purpose of this study is to evaluate whether gear type of an automobile is a significant predictor for a  vehicle efficiency expressed in miles per gallon. Moreover it is important to check whether other parameters appear to be significant predictors. 
-We will perform the study on a standard mtcars dataset included in R:
-The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models). R help 
+In this study we make an attempt to evaluate whether transmission type of an automobile is a significant predictor for a  vehicle efficiency expressed in miles per gallon. Moreover it is important to check whether other parameters appear to be significant predictors. 
 
 ## Exploratory analysis
-For the sake of visual simplicity We will rearrange the dataset such that each variable will be ordered according with total amount of correlation with other variables. IN this way a more visually clear correlation plot can be built: 
-```{r cars}
+We will perform the study on a standard mtcars dataset included in R:  
+
+>The data was extracted from the 1974 Motor Trend US magazine, 
+>and comprises fuel consumption and 10 aspects of automobile 
+>design and performance for 32 automobiles (1973–74 models).  
+>R help
+
+```{r overview, echo=FALSE}
 data("mtcars")
-head(mtcars)
+head(mtcars,4)
+```
+
+For the sake of visual simplicity we will rearrange each variable according with total amount of correlation with other variables. In this way a more visually clear correlation plot can be built: 
+```{r cars, fig.width=5, fig.height=2, fig.align='center', echo=FALSE}
 co <-abs(cor(mtcars))
-barplot(colSums(co))
+#barplot(colSums(co))
 mc <- mtcars[,order(colSums(co),decreasing = TRUE)]
 #barplot(colSums(abs(cor(mc)))) # just check that the parameters really got sorted by total amount of correlation
 co <-abs(cor(mc))
-corrplot.mixed(co, upper = "circle")
+#par(din = c(7,7),fin=c(5,5))
+corrplot.mixed(co, upper = "circle", number.cex = .5, tl.cex = .5, cl.cex =.7)
 ```
 
 From this plot one can obtain a general understanding of which variables correlate with the most other variables.
@@ -39,32 +52,24 @@ From this plot one can obtain a general understanding of which variables correla
 Since the outcome, mpg, is an interval variable, it is reasonable to use simple linear model for the whole study.
 The first obvious step is to create a simple model with one predictor, am   
 
-```{r mpg as predicted by manual/automatic, echo=FALSE}
-data(mtcars)
+```{r mpg_as_predicted_by_am,  fig.width=5, fig.height=3, fig.align='center',echo=FALSE}
 mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
 mdlam <- lm(mpg ~ am , data = mtcars)
 summary(mdlam)
 g1 <- ggplot(data = mtcars) + geom_violin(aes(x = am, y = mpg, fill = am))
-#
 g1 <- g1 + geom_abline(aes(intercept = mdlam$coef[1] -  mdlam$coef[2] ,slope = mdlam$coef[2]), col = "red")
 g1
-# mtcars$am <- factor(mtcars$am)
-# g <- ggplot(data = mtcars, aes(x = am, y = mpg, fill = am))
-# g <- g 
-# g
-
 ```
 
-The line looks fine and the p-values are highly significant.
-However, Adjusted R-squared points out that this model accounts for only 34% of variance in the data. Hence, we should expand the model to include more variables. Not all the available variables are necessary in the model, and we know that excess variables cause variance inflation and overfiting. As can be seen below, even though the Adjusted R-squared is rather high, none of the ceafficent are even remotely significant. 
+The line seems to be fitting the trend for the two groups and the p-values are highly significant.
+However, Adjusted R-squared points out that this model accounts for only 34% of variance in the data. Hence, we should expand the model to include more variables. Not all the available variables are necessary in the model, and we know that excess variables cause variance inflation and overfiting.  
 
+## Multivariate regression
+Below is a full model containing all the variables as predictors. As can be seen from the output, even though the Adjusted R-squared is rather high, none of the coefficents are even remotely significant. 
 
-```{r mpg as predicted by all, echo=FALSE, eval=TRUE}
-
-mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
+```{r mpg_as_predicted_by_all, echo=FALSE, eval=TRUE}
 mdlall <- lm(mpg ~ . , data = mtcars)
 summary(mdlall)
-
 ```
 
 We will use stepwise model selection procedure to sort out variables which do not contribute to the interpretability.
@@ -74,44 +79,33 @@ summary(mdlstep)
 vif(mdlstep)
 ```
 
-Stepwise Algorithm yeilds a model with 4 variables: cyl, hp, wt, am. Adjusted R-squared of 84% is significantly larger than that of the simplest model (with am as only predictor). This points out that 84 of variability in the dat can be explained by the improved model.
+Stepwise Algorithm yeilds a model with 4 variables: cyl, hp, wt, am. Adjusted R-squared of 84% is significantly larger than that of the simple model (with am as only predictor). This points out that 84 of variability in the data can be explained by the improved model.
 Variance inflation factor analysis does not reveal abnormally large (more than 10) values, which implies that model does not contain variables with high corelation with each other.  
 
 p-values for coefficents are significant except for the cyl8 and am1. The first one implies that there is no significant difference between 6 and 8 cylinder engine cars. The second one says there is no difference between gear types. 
 
 ```{r Anova, echo=FALSE}
-
 anova(mdlam, mdlstep, mdlall)
-
 ```
 
 
-Anova points out that the  mdlstep's variables are a significant (p-value less than 0.001) improvement over the simplest model, while full model does not give significant improvement over the mdlstep
+Anova points out that the  stepwise model's variables are a significant (p-value less than 0.001) improvement over the simple model, while full model does not give significant improvement over the mdlstep
 
-```{r residuals plot, echo=FALSE}
-
-par(mfrow=c(2,2))
+```{r residuals_plot,fig.width=7, fig.height=4, fig.align='center',echo=FALSE}
+par(mfrow=c(1,2))
 plot(mdlstep)
-
 ```
 
 Residuals plots do not express any non-random pattern which implies that what little variance is left in the model is normally random and unpredictable.  
 Standardised residuals are situated close to the normal line  on Q-Q plot, another indication that model leftover variance is random normal.  
-Cook'd distance plot does not reveal any extreme data that may influence the model in a game-changing way. 
+Cook's distance plot does not reveal any extreme data that may influence the model in a game-changing way. 
 
 
 ## Conclusion
-In this study we have proposed a model which tackles an amount of influence which different cars parameters exert on fuel consumption. A stepwise selection algorythm gave us a model with 4 main influencing parameters: number of cylinders (cyl), horsepower (hp), weight (wt) and gearbox type (am). While all the parameters are significant, the gearbox type is not. Hence we can conclude that the answer to the stydy's question, whether am is a significant predictor for the mpg, is negative.   
-As for the assignment questions, It is not reasonable to answer them since am significance level is not sufficient to be able to answer those questions. Nevertheless, suppose the coefficent was sufficiently significant, what would have been the answers to the questions?
+In this study we have proposed a model which tackles an amount of influence which different cars parameters exert on fuel consumption. A stepwise selection algorithm gave us a model with 4 main influencing parameters: number of cylinders (cyl), horsepower (hp), weight (wt) and gearbox type (am). While all the parameters  are significant  (having low p-value), the transmission type is not, which means that the model we created can not provide us with definitive answer to the questions asked in assignment.
+
+Nevertheless, suppose the coefficent was sufficiently significant, what would have been the answers to the questions then?
 1. “Is an automatic or manual transmission better for MPG”  
   am1 coefficent is positive, meaning that the manual transmission vehicles travel more miles on one gallon of fuel, so the manual transmission is better than automatic.  
 2. "Quantify the MPG difference between automatic and manual transmissions"  
   am1 coefficent is 1.8, so the manual transmission vehicles travel 1.8 miles more than automatic transmission vehicles on one gallon of fuel.  
-
-\newpage 
-##Appendix  
-
-
-
-
-===========================================================================

@@ -56,7 +56,9 @@ The first obvious step is to create a simple model with one predictor, am
 mtcars <- mutate(mtcars, cyl = factor(cyl), vs = factor(vs), am = factor(am), gear = factor(gear), carb = factor(carb))
 mdlam <- lm(mpg ~ am , data = mtcars)
 summary(mdlam)
-g1 <- ggplot(data = mtcars) + geom_violin(aes(x = am, y = mpg, fill = am))
+dodge <- position_dodge(width = 0.4)
+g1 <- ggplot(aes(x = am, y = mpg, fill = am), data = mtcars) 
+g1 <- g1 + geom_violin(position = dodge) + geom_boxplot(width=.1, position = dodge) 
 g1 <- g1 + geom_abline(aes(intercept = mdlam$coef[1] -  mdlam$coef[2] ,slope = mdlam$coef[2]), col = "red")
 g1
 ```
